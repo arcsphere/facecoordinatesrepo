@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Facial Coordinates Viewer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans flex flex-col items-center justify-center min-h-screen p-6">
+  <div class="bg-white rounded-2xl shadow-lg p-8 max-w-xl w-full">
+    <h1 class="text-2xl font-semibold mb-4 text-center">Facial Coordinates Viewer</h1>
+    <form id="uploadForm" class="flex flex-col gap-4">
+      <input type="file" id="imageInput" accept="image/*" class="border p-2 rounded" required />
+      <button type="submit" class="bg-blue-600 text-white rounded p-2 hover:bg-blue-700 transition">
+        Upload & Analyze
+      </button>
+    </form>
+
+    <div id="summary" class="mt-6 text-sm text-gray-700 hidden">
+      <p><strong>Detected Landmarks:</strong> <span id="landmarkCount">0</span></p>
+    </div>
+
+    <pre id="jsonOutput" class="mt-4 p-4 bg-gray-900 text-green-300 text-xs rounded overflow-x-auto hidden"></pre>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const imageInput = document.getElementById('imageInput');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const landmarkCount = document.getElementById('landmarkCount');
+    const summary = document.getElementById('summary');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const file = imageInput.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const res = await fetch('https://facial-coordinates.onrender.com/face-coordinates', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        const landmarkLength = Object.keys(data).length;
+
+        jsonOutput.textContent = JSON.stringify(data, null, 2);
+        landmarkCount.textContent = landmarkLength;
+        jsonOutput.classList.remove('hidden');
+        summary.classList.remove('hidden');
+      } catch (err) {
+        jsonOutput.textContent = 'Error: ' + err.message;
+        jsonOutput.classList.remove('hidden');
+        summary.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>
